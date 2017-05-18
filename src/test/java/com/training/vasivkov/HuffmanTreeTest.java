@@ -3,7 +3,6 @@ package com.training.vasivkov;
 import org.junit.Test;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -56,6 +55,19 @@ public class HuffmanTreeTest {
     }
 
     @Test
+    public void testTextToByteArray() throws Exception {
+        String fileName = getClass().getClassLoader().getResource("test1.txt").getFile();
+        Map<String, String> codeMap  = new HashMap<>();
+
+        //TODO fill codeMap - codeMap.put()....
+
+        HuffmanTree ht = new HuffmanTree();
+        List<Byte> bytes = ht.textToByteArray(null, new File(fileName));
+
+        //TODO asserts for bytes
+    }
+
+    @Test
     public void testMapToFile() throws Exception {
         HuffmanTree ht = new HuffmanTree();
         Map<String, String> mapForTest = new HashMap<>();
@@ -74,8 +86,8 @@ public class HuffmanTreeTest {
     @Test
     public void testMapFromFile() throws Exception {
         HuffmanTree ht = new HuffmanTree();
-        List<String> listForTest = ht.ListFromFile(new File("/users/Vasya/Documents/testFile.txt"));
-        Map<String, String> mapForTest = ht.ListToMap(listForTest);
+        List<String> listForTest = ht.listFromFile(new File("/users/Vasya/Documents/testFile.txt"));
+        Map<String, String> mapForTest = ht.listToMap(listForTest);
         System.out.println(mapForTest);
     }
 
@@ -83,22 +95,9 @@ public class HuffmanTreeTest {
     @Test
     public void bigTest() throws Exception {
         HuffmanTree ht = new HuffmanTree();
-        File file = new File("/users/Vasya/Documents/Winter's evening.txt");
-        List<Frequencies> frequenciesList = ht.readFile(file);
-        Map<String, String> codeMap = ht.findCodes(frequenciesList);
-        List<Byte> listHuffmanCode = ht.textToByteArray(codeMap, file);
-        ht.writeCodeToFile(listHuffmanCode);
-
-        List<String> listForCodeMap = ht.mapToList(codeMap);
-        ht.listToFile(listForCodeMap);
-
-        Map<String, String> decoderMap = ht.ListToMap(ht.ListFromFile(new File("/users/Vasya/Documents/huffman_code_Map.txt")));
-        List<Byte> listFromFile = ht.readCodeFromFile();
-
-        ht.decoder(listFromFile, decoderMap);
-
+        ht.encode("/users/Vasya/Documents/WINTER NIGHT.txt");
+        ht.decode("huffmanCode_WINTER NIGHT.txt", "codeMap_WINTER NIGHT.txt", "out.txt");
 
     }
-
 
 }

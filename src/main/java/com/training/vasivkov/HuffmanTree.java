@@ -9,8 +9,21 @@ import java.util.*;
 
 /**
  * Created by vasya on 19/04/17.
+ * TODO
+ * try with resources
  */
 public class HuffmanTree {
+
+    public void encode(String fileName) throws Exception {
+        File file = new File(fileName);
+        List<Frequencies> frequenciesList = readFile(file);
+        Map<String, String> codeMap = findCodes(frequenciesList);
+        List<Byte> listHuffmanCode = textToByteArray(codeMap, file);
+        writeCodeToFile(listHuffmanCode, file.getName());
+
+        List<String> listForCodeMap = mapToList(codeMap);
+        listToFile(listForCodeMap, file.getName());
+    }
 
     List<Frequencies> readFile(File file) throws IOException {
         Map<String, Integer> mapOfProbabilities = new HashMap<>();
@@ -38,55 +51,45 @@ public class HuffmanTree {
 
 
     Map<String, String> findCodes(List<Frequencies> frequenciesList) throws IOException {
+
         Map<String, String> codeMap = new HashMap<>();
-        for (Frequencies aFrequenciesList : frequenciesList) {
-            codeMap.put(aFrequenciesList.getSymbol(), "");
+        if (frequenciesList.size() == 0) {
+            return codeMap;
         }
 
-        if (codeMap.size() == 1) {
+        if (frequenciesList.size() == 1) {
             codeMap.put(frequenciesList.get(0).getSymbol(), "0");
             return codeMap;
         }
 
-        for (int i = 0; i <= frequenciesList.size(); i++) {
-            if (frequenciesList.size() == 1) {
-                break;
-            }
+        for (Frequencies aFrequenciesList : frequenciesList) {
+            codeMap.put(aFrequenciesList.getSymbol(), "");
+        }
 
-            frequenciesList.sort(new Comparator<Frequencies>() { // сортирую лист по частоте символов
-                @Override
-                public int compare(Frequencies o1, Frequencies o2) {
-                    return o2.getCountOfSymbol() - o1.getCountOfSymbol();
-                }
-            });
+        while (frequenciesList.size() > 1) {
+            Collections.sort(frequenciesList);
 
-            // нахожу сумму вероятностей 2х последних символов (самые редкие)
-            int sumCount = frequenciesList.get(frequenciesList.size() - 1).getCountOfSymbol() + frequenciesList.get(frequenciesList.size() - 2).getCountOfSymbol();
-            // конкатенирую 2 самых редких символа
-            String sumSmbols = frequenciesList.get(frequenciesList.size() - 1).getSymbol() + frequenciesList.get(frequenciesList.size() - 2).getSymbol();
+            Frequencies sumFrequenices = Frequencies.sum(frequenciesList.get(frequenciesList.size() - 1), frequenciesList.get(frequenciesList.size() - 2));
 
-            String[] letters = frequenciesList.get(frequenciesList.size() - 1).getSymbol().split(""); // разбиваю набор символов на отдельные символы
+            String[] letters = frequenciesList.remove(frequenciesList.size() - 1).getSymbol().split(""); // разбиваю набор символов на отдельные символы
             for (int j = 0; j < letters.length; j++) {
                 codeMap.put(letters[j], "1" + codeMap.get(letters[j])); // изменяю значения в карте добавляя вперед 1
             }
-            frequenciesList.remove(frequenciesList.size() - 1); // удаляю последнее значение из листа
 
-            letters = frequenciesList.get(frequenciesList.size() - 1).getSymbol().split(""); // те же действия еще раз, но добавляю 0;
+            letters = frequenciesList.remove(frequenciesList.size() - 1).getSymbol().split(""); // те же действия еще раз, но добавляю 0;
             for (int j = 0; j < letters.length; j++) {
                 codeMap.put(letters[j], "0" + codeMap.get(letters[j]));
             }
-            frequenciesList.remove(frequenciesList.size() - 1);
 
-            frequenciesList.add(new Frequencies(sumSmbols, sumCount)); // вставляю в лист результирующее значение
-
+            frequenciesList.add(sumFrequenices); // вставляю в лист результирующее значение
         }
+
         return codeMap;
     }
 
 
-
     List<Byte> textToByteArray(Map<String, String> codeMap, File file) throws IOException {
-
+        //TODO try with resources
         List<Byte> byteCode = new ArrayList<>();
         StringBuilder tmpString = new StringBuilder();
 
@@ -100,7 +103,6 @@ public class HuffmanTree {
             while (tmpString.length() > 7) {
                 String tmp = tmpString.substring(0, 7);
                 byteCode.add(Byte.valueOf(tmp, 2)); // объединяю по 7 и периодически сбрасываю в список ввиде байт
-                System.out.print(tmpString.substring(0, 7));
                 tmpString.delete(0, 7); // удаляю из временной строки этот диапазон
             }
         }
@@ -110,12 +112,13 @@ public class HuffmanTree {
         return byteCode;
     }
 
-    void writeCodeToFile(List<Byte> listByte) {
+    void writeCodeToFile(List<Byte> listByte, String fileName) {
+        //TODO try with resources
         Byte[] arrayOfByte = listByte.toArray(new Byte[listByte.size()]);
         byte[] bytes = ArrayUtils.toPrimitive(arrayOfByte);
         FileOutputStream fos = null;
         try {
-            fos = new FileOutputStream("/users/Vasya/Documents/huffman_code.txt");
+            fos = new FileOutputStream("huffmanCode_" + fileName);
             fos.write(bytes);
         } catch (IOException e) {
             e.printStackTrace();
@@ -138,10 +141,10 @@ public class HuffmanTree {
         return list;
     }
 
-    void listToFile(List<String> list) {
+    void listToFile(List<String> list, String fileName) {
         ObjectOutputStream oos = null;
         try {
-            oos = new ObjectOutputStream(new FileOutputStream(new File("/users/Vasya/Documents/huffman_code_Map.txt")));
+            oos = new ObjectOutputStream(new FileOutputStream(new File("codeMap_" + fileName)));
             oos.writeObject(list);
         } catch (IOException e) {
             e.printStackTrace();
@@ -159,7 +162,7 @@ public class HuffmanTree {
 
     // ++++++++++++ DECODER +++++++++++++++++++++++++++++
 
-    public List<String> ListFromFile(File file) {
+    public List<String> listFromFile(File file) {
         ObjectInputStream ois = null;
         List<String> list = null;
         try {
@@ -179,7 +182,7 @@ public class HuffmanTree {
     }
 
 
-    Map<String, String> ListToMap(List<String> list) {
+    Map<String, String> listToMap(List<String> list) {
         Map<String, String> map = new HashMap<>();
         for (int i = 1; i < list.size(); i++) {
             if (i % 2 != 0) {
@@ -190,11 +193,11 @@ public class HuffmanTree {
         return map;
     }
 
-    List<Byte> readCodeFromFile() {
+    List<Byte> readCodeFromFile(String fileName) {
         List<Byte> listFromFile = new ArrayList<>();
         FileInputStream fis = null;
         try {
-            fis = new FileInputStream(new File("/users/Vasya/Documents/huffman_code.txt"));
+            fis = new FileInputStream(new File(fileName));
             while (fis.available() > 0) {
                 listFromFile.add((byte) fis.read());
             }
@@ -211,10 +214,17 @@ public class HuffmanTree {
     }
 
 
-    void decoder(List<Byte> resultArray, Map<String, String> decodeMap) {
+    public void decode(String huffmanCodeFile, String codeMapFile, String destinationFile) {
+        Map<String, String> decoderMap = listToMap(listFromFile(new File(codeMapFile)));
+        List<Byte> listFromFile = readCodeFromFile(huffmanCodeFile);
+
+        decoder(listFromFile, decoderMap, destinationFile);
+    }
+
+    public void decoder(List<Byte> resultArray, Map<String, String> decodeMap, String destinationFile) {
         FileWriter fw = null;
         try {
-            fw = new FileWriter("/users/Vasya/Documents/file_out.txt");
+            fw = new FileWriter(destinationFile);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -228,17 +238,17 @@ public class HuffmanTree {
 
                 tmpString.append(shortString.substring(7 - count, 7));
 
-            }else {
+            } else {
                 tmpString.append(oneZeroString(resultArray.get(i)));
             }
 
-            for (int j = 0; j < tmpString.length() ; j++) {
+            for (int j = 0; j < tmpString.length(); j++) {
 
                 stringForFindCode.append(tmpString.charAt(j));
                 if (decodeMap.containsKey(stringForFindCode.toString())) {
                     try {
 
-                       fw.write(decodeMap.get(stringForFindCode.toString()));
+                        fw.write(decodeMap.get(stringForFindCode.toString()));
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -254,7 +264,6 @@ public class HuffmanTree {
             e.printStackTrace();
         }
     }
-
 
 
     String oneZeroString(Byte b) {

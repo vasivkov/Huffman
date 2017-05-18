@@ -3,7 +3,7 @@ package com.training.vasivkov;
 /**
  * Created by vasya on 18/05/17.
  */
-class Frequencies {
+class Frequencies implements Comparable<Frequencies> {
     private String symbol;
     private Integer countOfSymbol;
 
@@ -28,8 +28,17 @@ class Frequencies {
         this.symbol = symbol;
     }
 
+    public static Frequencies sum(Frequencies f1, Frequencies f2) {
+        return new Frequencies(f1.symbol + f2.symbol, f1.countOfSymbol + f2.countOfSymbol);
+    }
+
     @Override
     public String toString() {
         return symbol + " - " + countOfSymbol;
+    }
+
+    @Override
+    public int compareTo(Frequencies o) {
+        return o.getCountOfSymbol() - this.getCountOfSymbol();
     }
 }
