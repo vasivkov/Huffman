@@ -7,44 +7,46 @@ import java.io.*;
 import java.util.*;
 
 
-/**
- * Created by vasya on 19/04/17.
- * TODO
- * try with resources
- */
-public class HuffmanTree {
+public class HuffmanCode {
 
-    public void encode(String fileName) throws Exception {
+    public void encode(String fileName, String destCodeMap, String destHuffmanCode) throws Exception {
         File file = new File(fileName);
         List<Frequencies> frequenciesList = readFile(file);
         Map<String, String> codeMap = findCodes(frequenciesList);
         List<Byte> listHuffmanCode = textToByteArray(codeMap, file);
-        writeCodeToFile(listHuffmanCode, file.getName());
+        writeCodeToFile(listHuffmanCode, destHuffmanCode);
 
         List<String> listForCodeMap = mapToList(codeMap);
-        listToFile(listForCodeMap, file.getName());
+        listToFile(listForCodeMap, destCodeMap);
     }
 
-    List<Frequencies> readFile(File file) throws IOException {
-        Map<String, Integer> mapOfProbabilities = new HashMap<>();
-        BufferedInputStream fis = new BufferedInputStream(new FileInputStream(file));
+    public void encode(String fileName) throws Exception {
+        File file = new File(fileName);
+        encode(fileName, "codeMap_" + file.getName(), "huffmanCode_" + file.getName());
+    }
 
-        while (fis.available() > 0) {
-            char ch = (char) fis.read();
-            String symbol = String.valueOf(ch);
-            if (!mapOfProbabilities.containsKey(symbol)) {
-                mapOfProbabilities.put(symbol, 1);
-            } else {
-                mapOfProbabilities.put(symbol, mapOfProbabilities.get(symbol) + 1);
+    List<Frequencies> readFile(File file) {
+        Map<String, Integer> mapOfProbabilities = new HashMap<>();
+        try(BufferedInputStream fis = new BufferedInputStream(new FileInputStream(file))){
+            while (fis.available() > 0) {
+                char ch = (char) fis.read();
+                String symbol = String.valueOf(ch);
+                if (!mapOfProbabilities.containsKey(symbol)) {
+                    mapOfProbabilities.put(symbol, 1);
+                } else {
+                    mapOfProbabilities.put(symbol, mapOfProbabilities.get(symbol) + 1);
+                }
             }
+        } catch (IOException  e) {
+            e.printStackTrace();
         }
+
 
         List<Frequencies> frequenciesList = new ArrayList<>();
         for (Map.Entry<String, Integer> entry : mapOfProbabilities.entrySet()) {
             frequenciesList.add(new Frequencies(entry.getKey(), entry.getValue()));
         }
 
-        fis.close();
 
         return frequenciesList;
     }
@@ -88,51 +90,43 @@ public class HuffmanTree {
     }
 
 
-    List<Byte> textToByteArray(Map<String, String> codeMap, File file) throws IOException {
-        //TODO try with resources
+    List<Byte> textToByteArray(Map<String, String> codeMap, File file)  {
         List<Byte> byteCode = new ArrayList<>();
         StringBuilder tmpString = new StringBuilder();
+        try(BufferedInputStream fis = new BufferedInputStream(new FileInputStream(file))){
+            while (fis.available() > 0) {
+                char ch = (char) fis.read();
+                String symbol = String.valueOf(ch);
 
-        BufferedInputStream fis = new BufferedInputStream(new FileInputStream(file));
-
-        while (fis.available() > 0) {
-            char ch = (char) fis.read();
-            String symbol = String.valueOf(ch);
-
-            tmpString.append(codeMap.get(symbol));
-            while (tmpString.length() > 7) {
-                String tmp = tmpString.substring(0, 7);
-                byteCode.add(Byte.valueOf(tmp, 2)); // объединяю по 7 и периодически сбрасываю в список ввиде байт
-                tmpString.delete(0, 7); // удаляю из временной строки этот диапазон
+                tmpString.append(codeMap.get(symbol));
+                while (tmpString.length() > 7) {
+                    String tmp = tmpString.substring(0, 7);
+                    byteCode.add(Byte.valueOf(tmp, 2)); // объединяю по 7 и периодически сбрасываю в список ввиде байт
+                    tmpString.delete(0, 7); // удаляю из временной строки этот диапазон
+                }
             }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+
+
         int incompleteGroup = tmpString.length(); // запоминаю кол-во элементов в неполной группе
         byteCode.add(Byte.valueOf(tmpString.toString(), 2));
         codeMap.put("" + incompleteGroup, "count");
         return byteCode;
     }
 
-    void writeCodeToFile(List<Byte> listByte, String fileName) {
-        //TODO try with resources
+    private void writeCodeToFile(List<Byte> listByte, String fileName) {
         Byte[] arrayOfByte = listByte.toArray(new Byte[listByte.size()]);
         byte[] bytes = ArrayUtils.toPrimitive(arrayOfByte);
-        FileOutputStream fos = null;
-        try {
-            fos = new FileOutputStream("huffmanCode_" + fileName);
+        try(FileOutputStream fos = new FileOutputStream(fileName); ){
             fos.write(bytes);
         } catch (IOException e) {
             e.printStackTrace();
-        } finally {
-            try {
-                assert fos != null;
-                fos.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
     }
 
-    List<String> mapToList(Map<String, String> map) {
+    private List<String> mapToList(Map<String, String> map) {
         List<String> list = new ArrayList<>();
         for (Map.Entry entry : map.entrySet()) {
             list.add((String) entry.getValue());
@@ -141,48 +135,30 @@ public class HuffmanTree {
         return list;
     }
 
-    void listToFile(List<String> list, String fileName) {
-        ObjectOutputStream oos = null;
-        try {
-            oos = new ObjectOutputStream(new FileOutputStream(new File("codeMap_" + fileName)));
+    private void listToFile(List<String> list, String fileName) {
+        try(ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(fileName)));) {
             oos.writeObject(list);
         } catch (IOException e) {
             e.printStackTrace();
-        } finally {
-            try {
-                assert oos != null;
-                oos.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
         }
     }
 
 
     // ++++++++++++ DECODER +++++++++++++++++++++++++++++
 
-    public List<String> listFromFile(File file) {
-        ObjectInputStream ois = null;
+    private List<String> listFromFile(File file) {
         List<String> list = null;
-        try {
-            ois = new ObjectInputStream(new FileInputStream(file));
+        try( ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))){
             list = (ArrayList<String>) ois.readObject();
-        } catch (Exception e) {
+        } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
-        } finally {
-            try {
-                assert ois != null;
-                ois.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
+
         return list;
     }
 
 
-    Map<String, String> listToMap(List<String> list) {
+    private Map<String, String> listToMap(List<String> list) {
         Map<String, String> map = new HashMap<>();
         for (int i = 1; i < list.size(); i++) {
             if (i % 2 != 0) {
@@ -193,22 +169,14 @@ public class HuffmanTree {
         return map;
     }
 
-    List<Byte> readCodeFromFile(String fileName) {
+    private List<Byte> readCodeFromFile(String fileName) {
         List<Byte> listFromFile = new ArrayList<>();
-        FileInputStream fis = null;
-        try {
-            fis = new FileInputStream(new File(fileName));
+        try(FileInputStream fis = new FileInputStream(new File(fileName))){
             while (fis.available() > 0) {
                 listFromFile.add((byte) fis.read());
             }
         } catch (IOException e) {
             e.printStackTrace();
-        } finally {
-            try {
-                fis.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
         return listFromFile;
     }
@@ -221,52 +189,40 @@ public class HuffmanTree {
         decoder(listFromFile, decoderMap, destinationFile);
     }
 
-    public void decoder(List<Byte> resultArray, Map<String, String> decodeMap, String destinationFile) {
-        FileWriter fw = null;
-        try {
-            fw = new FileWriter(destinationFile);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        StringBuilder tmpString = new StringBuilder();
-        StringBuilder stringForFindCode = new StringBuilder();
+    private void decoder(List<Byte> resultArray, Map<String, String> decodeMap, String destinationFile) {
+        try (FileWriter fw = new FileWriter(destinationFile) ){
 
-        for (int i = 0; i < resultArray.size(); i++) {
-            if (i == resultArray.size() - 1) {// последний байт, который может быть неполным
-                String shortString = oneZeroString(resultArray.get(i));
-                int count = Integer.parseInt(decodeMap.get("count"));
+            StringBuilder tmpString = new StringBuilder();
+            StringBuilder stringForFindCode = new StringBuilder();
 
-                tmpString.append(shortString.substring(7 - count, 7));
+            for (int i = 0; i < resultArray.size(); i++) {
+                if (i == resultArray.size() - 1) {// последний байт, который может быть неполным
+                    String shortString = oneZeroString(resultArray.get(i));
+                    int count = Integer.parseInt(decodeMap.get("count"));
 
-            } else {
-                tmpString.append(oneZeroString(resultArray.get(i)));
-            }
+                    tmpString.append(shortString.substring(7 - count, 7));
 
-            for (int j = 0; j < tmpString.length(); j++) {
-
-                stringForFindCode.append(tmpString.charAt(j));
-                if (decodeMap.containsKey(stringForFindCode.toString())) {
-                    try {
-
-                        fw.write(decodeMap.get(stringForFindCode.toString()));
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    stringForFindCode.delete(0, stringForFindCode.length());
+                } else {
+                    tmpString.append(oneZeroString(resultArray.get(i)));
                 }
+
+                for (int j = 0; j < tmpString.length(); j++) {
+
+                    stringForFindCode.append(tmpString.charAt(j));
+                    if (decodeMap.containsKey(stringForFindCode.toString())) {
+                        fw.write(decodeMap.get(stringForFindCode.toString()));
+                        stringForFindCode.delete(0, stringForFindCode.length());
+                    }
+                }
+                tmpString.delete(0, 7);
             }
-            tmpString.delete(0, 7);
-        }
-        try {
-            assert fw != null;
-            fw.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
 
-    String oneZeroString(Byte b) {
+    private String oneZeroString(Byte b) {
         StringBuilder tmpString = new StringBuilder();
         StringBuilder oneZeroString = new StringBuilder();
         tmpString.append("0000000");
