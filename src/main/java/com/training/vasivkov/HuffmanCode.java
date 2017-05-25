@@ -5,6 +5,7 @@ import org.apache.commons.lang3.ArrayUtils;
 
 import java.io.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 public class HuffmanCode {
@@ -41,14 +42,9 @@ public class HuffmanCode {
             e.printStackTrace();
         }
 
-
-        List<Frequencies> frequenciesList = new ArrayList<>();
-        for (Map.Entry<String, Integer> entry : mapOfProbabilities.entrySet()) {
-            frequenciesList.add(new Frequencies(entry.getKey(), entry.getValue()));
-        }
-
-
-        return frequenciesList;
+        return mapOfProbabilities.entrySet().stream()
+                .map(entry -> new Frequencies(entry.getKey(), entry.getValue()))
+                .collect(Collectors.toList());
     }
 
 
@@ -74,13 +70,13 @@ public class HuffmanCode {
             Frequencies sumFrequenices = Frequencies.sum(frequenciesList.get(frequenciesList.size() - 1), frequenciesList.get(frequenciesList.size() - 2));
 
             String[] letters = frequenciesList.remove(frequenciesList.size() - 1).getSymbol().split(""); // разбиваю набор символов на отдельные символы
-            for (int j = 0; j < letters.length; j++) {
-                codeMap.put(letters[j], "1" + codeMap.get(letters[j])); // изменяю значения в карте добавляя вперед 1
+            for (String letter : letters) {
+                codeMap.put(letter, "1" + codeMap.get(letter)); // изменяю значения в карте добавляя вперед 1
             }
 
             letters = frequenciesList.remove(frequenciesList.size() - 1).getSymbol().split(""); // те же действия еще раз, но добавляю 0;
-            for (int j = 0; j < letters.length; j++) {
-                codeMap.put(letters[j], "0" + codeMap.get(letters[j]));
+            for (String letter : letters) {
+                codeMap.put(letter, "0" + codeMap.get(letter));
             }
 
             frequenciesList.add(sumFrequenices); // вставляю в лист результирующее значение
@@ -132,6 +128,7 @@ public class HuffmanCode {
             list.add((String) entry.getValue());
             list.add((String) entry.getKey());
         }
+
         return list;
     }
 
