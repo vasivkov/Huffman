@@ -35,7 +35,7 @@ public class HuffmanCodeTest {
         assertEquals("0110", mapForTest.get("e"));
         assertEquals("010", mapForTest.get("l"));
     }
-    
+
     @Test
     public void testFindCodesForOneSymbol() throws Exception {
         HuffmanCode ht = new HuffmanCode();
@@ -48,12 +48,12 @@ public class HuffmanCodeTest {
     }
 
     @Test
-    public  void testReadFile() throws  Exception {
+    public void testReadFile() throws Exception {
         HuffmanCode ht = new HuffmanCode();
         String fileName = getClass().getClassLoader().getResource("test1.txt").getFile();
         List<Frequencies> listForTest = ht.readFile(new File(fileName));
         Map<String, Integer> mapForTest = new HashMap<>();
-        for (Frequencies freq: listForTest) {
+        for (Frequencies freq : listForTest) {
             mapForTest.put(freq.getSymbol(), freq.getCountOfSymbol());
         }
 
@@ -67,7 +67,7 @@ public class HuffmanCodeTest {
     @Test
     public void testTextToByteArray() throws Exception {
         String fileName = getClass().getClassLoader().getResource("test1.txt").getFile();
-        Map<String, String> codeMap  = new HashMap<>();
+        Map<String, String> codeMap = new HashMap<>();
 
         codeMap.put(" ", "01");
         codeMap.put("r", "0010");
@@ -80,7 +80,7 @@ public class HuffmanCodeTest {
 
         HuffmanCode ht = new HuffmanCode();
         List<Byte> bytes = ht.textToByteArray(codeMap, new File(fileName));
-        List<Byte> expectedBytes = Arrays.asList((byte)49, (byte)74, (byte)27, (byte)40, (byte)5, (byte)2);
+        List<Byte> expectedBytes = Arrays.asList((byte) 49, (byte) 74, (byte) 27, (byte) 40, (byte) 5, (byte) 2);
 
         assertTrue(bytes.equals(expectedBytes));
     }
@@ -110,6 +110,11 @@ public class HuffmanCodeTest {
             FileUtils.forceDelete(new File(huffmanCodeDestFile));
             FileUtils.forceDelete(new File(decodedTextFilePath));
         }
+    }
+
+    @Test
+    public void jenkinsTest() throws Exception {
+        assertTrue(1 == 2);
     }
 
 }
