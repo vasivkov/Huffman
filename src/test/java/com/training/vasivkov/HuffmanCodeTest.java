@@ -112,9 +112,6 @@ public class HuffmanCodeTest {
         }
     }
 
-    @Test
-    public void jenkinsTest() throws Exception {
-        assertTrue(1 == 2);
-    }
+
 
 }
